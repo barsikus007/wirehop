@@ -1,7 +1,7 @@
 # WireHop(e)
 
-WireHop is a multihop ready WireGuard-in-docker system. You can use wirehole and PBR. (not done yet)
-WireHop(e) (sane fork of WireHole) is a combination of wg-easy, Pi-hole, and unbound in a compose project with the intent of enabling users to quickly and easily create and deploy a personally managed full or split-tunnel WireGuard VPN with ad blocking capabilities (via Pihole), and DNS caching with additional privacy options (via unbound).
+WireHop is a multihop ready WireGuard-in-docker system. You can use wirehop with PBR (not done yet)
+WireHop(e) (sane fork of WireHole) is a combination of wg-easy, Pi-hole, and unbound in a compose project with the intent of enabling users to quickly and easily create and deploy a personally managed full or split-tunnel WireGuard VPN with ad blocking capabilities (via Pihole), and DNS caching with additional privacy options (via unbound)
 
 ## Install
 

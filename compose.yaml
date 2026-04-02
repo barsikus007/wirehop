@@ -3,7 +3,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: ${SUBNET?}.0/24
+        - subnet: ${DOCKER_SUBNET?}.0/24
 
 services:
   unbound:
@@ -50,6 +50,7 @@ services:
       - unbound
 
   wg-easy:
+    #? https://github.com/wg-easy/wg-easy/tree/v14
     image: ghcr.io/wg-easy/wg-easy:14
     restart: unless-stopped
     dns:
@@ -57,23 +58,27 @@ services:
       - ${DNS_INTERNAL_HOST?}
     ports:
       - ${WG_PORT?}:${WG_PORT?}/udp
-      - 51821:51821  # Comment this line after first launch if you want, to disable web interface access from WWW (you can still access it inside VPN).
+      - 51821:51821 # Comment this line after first launch if you want, to disable web interface access from WWW (you can still access it inside VPN).
     environment:
+      WG_DEFAULT_ADDRESS: ${WG_SUBNET?}.x
       WG_HOST: ${WG_HOST?}
       WG_PORT: ${WG_PORT?}
-      WG_DEFAULT_DNS: ${PIH_INTERNAL_HOST?}${AWG}
+      WG_DEFAULT_DNS: ${WG_SUBNET?}.1${AWG}
       WG_ALLOWED_IPS: ${WG_ALLOWED_IPS?}
       PASSWORD_HASH: ${WG_PASSWORD_HASH?}
       UI_TRAFFIC_STATS: true
       UI_CHART_TYPE: 1
+      WG_PRE_UP: iptables --table nat --append PREROUTING --in-interface wg0 --protocol udp --match udp --destination-port 53 --jump DNAT --to-destination 127.0.0.11; iptables --table nat --append PREROUTING --in-interface wg0 --protocol tcp --match tcp --destination-port 53 --jump DNAT --to-destination 127.0.0.11
+      WG_PRE_DOWN: iptables --table nat --delete PREROUTING --in-interface wg0 --protocol udp --match udp --destination-port 53 --jump DNAT --to-destination 127.0.0.11; iptables --table nat --delete PREROUTING --in-interface wg0 --protocol tcp --match tcp --destination-port 53 --jump DNAT --to-destination 127.0.0.11
     volumes:
       - ./wireguard/:/etc/wireguard/
     cap_add:
-      - NET_ADMIN  # Neccessary for Wireguard to create its VPN interface.
-      - SYS_MODULE  # Neccessary for loading Wireguard kernel module if it's not already loaded.
+      - NET_ADMIN # Neccessary for Wireguard to create its VPN interface.
+      - SYS_MODULE # Neccessary for loading Wireguard kernel module if it's not already loaded.
     sysctls:
-      - net.ipv4.ip_forward=1  # WG requires IP forwarding (else it will drop packets with other destinations)
+      - net.ipv4.ip_forward=1 # WG requires IP forwarding (else it will drop packets with other destinations)
       - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.conf.all.route_localnet=1 # DNS route to local resolver
     networks:
       private_network:
         ipv4_address: ${WG_INTERNAL_HOST?}
